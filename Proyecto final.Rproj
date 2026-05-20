@@ -48,41 +48,6 @@ head(salida)
 errorR1 <- learnErrors(filR1, multithread = T)
 errorR2 <- learnErrors(filR2, multithread = T)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 dadaR1 <- dada(filR1, err = errorR1, multithread = T)
 dadaR2 <- dada(filR2, err = errorR2, multithread = T)
 
