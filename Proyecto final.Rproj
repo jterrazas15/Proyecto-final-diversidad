@@ -102,6 +102,31 @@ ps <- phyloseq(
 
 alpha <- estimate_richness(ps,measures = c("Observed","Chao1", "Shannon", "Simpson", "Invsimpson"))
 
-ggplot(alpha, aes(x = "", y = Shannon)) + 
-  geom_boxplot(col= "darkblue", fill = "skyblue") + 
-  labs(title ="Diversidad alfa (shannon)", x = "", y = "Indice Shannon")
+diver <- ggplot(alpha, aes(x = "", y = Shannon)) + 
+  geom_boxplot(col= "darkblue", fill = "skyblue") +
+labs(title ="Diversidad alfa (shannon)", x = "", y = "Indice Shannon")
+ggsave(plot = diver, "Resultados/diversidad_alpha.jpg"
+
+###Diversidad beta (bray curtis)
+
+ot <- otu_table(ps)
+ot <- as(ot, "matrix")
+bray_dist  <- vegdist (ot, method = "bray")
+
+beta <- plot(bray_dist)
+
+ggsave("Resultados/Diversidad_beta.jpg", plot = beta)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
