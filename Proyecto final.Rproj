@@ -63,3 +63,11 @@ ps <- phyloseq(
   otu_table(tabla_secuencias, taxa_are_rows = FALSE),
   tax_table(taxa)
 )
+
+#### Diversidad alfa
+
+alpha <- estimate_richness(ps,measures = c("Observed","Chao1", "Shannon", "Simpson", "Invsimpson"))
+
+ggplot(alpha, aes(x = "", y = Shannon)) + 
+  geom_boxplot(col= "darkblue", fill = "skyblue") + 
+  labs(title ="Diversidad alfa (shannon)", x = "", y = "Indice Shannon")
