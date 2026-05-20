@@ -11,3 +11,55 @@ Encoding: UTF-8
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dadaR1 <- dada(filR1, err = errorR1, multithread = T)
+dadaR2 <- dada(filR2, err = errorR2, multithread = T)
+
+combi <- mergePairs(dadaR1, filR1, dadaR2, filR2, verbose=T)
+head(combi)
+
+tabla_secuencias <- makeSequenceTable(combi)
+
+taxa <- assignTaxonomy(tabla_secuencias, "Datos/silva_nr99_v138.2_toGenus_trainset.fa.gz", multithread = T)
+
+ps <- phyloseq(
+  otu_table(tabla_secuencias, taxa_are_rows = FALSE),
+  tax_table(taxa)
+)
