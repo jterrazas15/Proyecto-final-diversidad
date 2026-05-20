@@ -12,7 +12,41 @@ Encoding: UTF-8
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
 
+############################################
+### Analisi de Diversidad de murcielagos ###
+############################################
 
+##########################
+### Descargar archivos ###
+##########################
+# Se hizo en bash usando sra toolkit
+
+###############################################
+### Filtrado de calidad y union de lecturas ###
+###############################################
+
+library(dada2)
+library(phyloseq)
+library(vegan)
+install.packages("caret")
+library(caret)
+
+ruta <- "Datos"
+
+R1 <- sort(list.files(ruta, pattern = "PRJNA494618_1.fastq", full.names = T))
+R2 <- sort(list.files(ruta, pattern = "PRJNA494618_2.fastq", full.names = T))
+
+filR1 <- file.path(ruta, "Filtrados", basename(R1))
+filR2 <- file.path(ruta, "Filtrados", basename(R2))
+
+salida <- filterAndTrim(R1, filR1, R2, filR2,
+                        truncLen = 0,
+                        maxN = 0, maxEE = c(2,2), truncQ=2, rm.phix = T,
+                        compress=T, multithread = T)
+head(salida)
+
+errorR1 <- learnErrors(filR1, multithread = T)
+errorR2 <- learnErrors(filR2, multithread = T)
 
 
 
