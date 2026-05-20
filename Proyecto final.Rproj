@@ -91,7 +91,29 @@ ggsave("Resultados/Diversidad_beta.jpg", plot = beta)
 
 
 
+##### Permanova
 
+labs(title = "PCoA basado en Bray-Curtis", x= "PCoA 1", y= "PCoA 2")
+
+metadata <- read.csv("Datos/SraRunTable.csv")
+head(metadata)
+
+metadata$Colonia <- metadata$isolation_score
+metadata$Fecha <- metadata$Collection_Date
+metadata$Individuo <- metadata$Sample.Name
+
+metadata$Run
+
+rownames(metadata) <- metadata$Run
+
+head(metadata)
+
+
+sample_data(ps) <- sample_data(metadata)
+
+adonis2(bray_dist~Tipo_Sitio + Colonia + Fecha,
+        data= metadata,
+        permutations = 100)
 
 
 
