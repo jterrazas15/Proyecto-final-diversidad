@@ -1,0 +1,188 @@
+---
+title: "Analisis de Diversidad Microbiana"
+author: "Julio Cesar Terrazas Hernandez y Clara Celina Martinez Ramirez"
+date: "2026-05-20"
+output: html_document
+---
+
+# Introducción
+
+En este análisis se evaluó la diversidad microbiana asociada a muestras de murciélagos mediante secuencias de amplicones.  
+Se utilizó el paquete `DADA2` para el procesamiento de secuencias, así como herramientas de análisis ecológico para evaluar diversidad alfa y beta.
+
+# Objetivos
+
+- Realizar control de calidad de secuencias.
+- Inferir variantes de secuencia (ASVs).
+- Asignar taxonomía bacteriana.
+- Evaluar diversidad alfa.
+- Analizar diversidad beta mediante Bray-Curtis.
+- Visualizar agrupamientos con PCoA.
+- Realizar análisis estadístico con PERMANOVA.
+
+# Librerías utilizadas
+
+```{r message=FALSE, warning=FALSE}
+library(dada2)
+library(phyloseq)
+library(vegan)
+library(caret)
+library(ggplot2)
+
+
+ruta <- "Datos"
+
+R1 <- sort(list.files(ruta,
+                      pattern = "PRJNA494618_1.fastq",
+                      full.names = TRUE))
+
+R2 <- sort(list.files(ruta,
+                      pattern = "PRJNA494618_2.fastq",
+                      full.names = TRUE))
+filR1 <- file.path(ruta, "Filtrados", basename(R1))
+filR2 <- file.path(ruta, "Filtrados", basename(R2))
+
+salida <- filterAndTrim(
+  R1, filR1,
+  R2, filR2,
+  truncLen = 0,
+  maxN = 0,
+  maxEE = c(2,2),
+  truncQ = 2,
+  rm.phix = TRUE,
+  compress = TRUE,
+  multithread = TRUE
+)
+
+head(salida)
+
+errorR1 <- learnErrors(filR1, multithread = TRUE)
+errorR2 <- learnErrors(filR2, multithread = TRUE)
+
+dadaR1 <- dada(filR1,
+               err = errorR1,
+               multithread = TRUE)
+
+dadaR2 <- dada(filR2,
+               err = errorR2,
+               multithread = TRUE)
+
+combi <- mergePairs(
+  dadaR1, filR1,
+  dadaR2, filR2,
+  verbose = TRUE
+)
+
+head(combi)
+tabla_secuencias <- makeSequenceTable(combi)
+
+taxa <- assignTaxonomy(
+  tabla_secuencias,
+  "Datos/silva_nr99_v138.2_toGenus_trainset.fa.gz",
+  multithread = TRUE
+)
+
+ps <- phyloseq(
+  otu_table(tabla_secuencias,
+            taxa_are_rows = FALSE),
+  tax_table(taxa)
+)
+
+alpha <- estimate_richness(
+  ps,
+  measures = c(
+    "Observed",
+    "Chao1",
+    "Shannon",
+    "Simpson",
+    "InvSimpson"
+  )
+)
+
+head(alpha)
+
+ggplot(alpha,
+       aes(x = "", y = Shannon)) +
+  geom_boxplot(
+    color = "darkblue",
+    fill = "skyblue"
+  ) +
+  labs(
+    title = "Diversidad alfa (Shannon)",
+    x = "",
+    y = "Índice de Shannon"
+  ) +
+  theme_minimal()
+
+ot <- otu_table(ps)
+ot <- as(ot, "matrix")
+
+bray_dist <- vegdist(
+  ot,
+  method = "bray"
+)
+
+pcoa <- cmdscale(
+  bray_dist,
+  k = 2,
+  eig = TRUE
+)
+
+pcoa_df <- data.frame(
+  PCo1 = pcoa$points[,1],
+  PCo2 = pcoa$points[,2]
+)
+
+head(pcoa_df)
+
+ggplot(pcoa_df,
+       aes(x = PCo1, y = PCo2)) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  labs(
+    title = "PCoA basado en Bray-Curtis",
+    x = "PCoA 1",
+    y = "PCoA 2"
+  )
+
+metadata <- read.csv("Datos/SraRunTable.csv")
+
+head(metadata)
+
+metadata$Colonia <- metadata$isolation_source
+metadata$Fecha <- metadata$Collection_Date
+metadata$Individuo <- metadata$Sample.Name
+
+rownames(metadata) <- metadata$Run
+
+head(metadata)
+
+sample_data(ps) <- sample_data(metadata)
+
+adonis2(
+  bray_dist ~ Tipo_Sitio + Colonia + Fecha,
+  data = metadata,
+  permutations = 99
+)
+ps_pelo <- subset_samples(
+  ps,
+  Tipo_Sitio == "fur"
+)
+otu_pelo <- otu_table(ps_pelo)
+otu_pelo <- as(otu_pelo, "matrix")
+
+bray_pelo <- vegdist(
+  otu_pelo,
+  method = "bray"
+)
+
+meta_pelo <- data.frame(sample_data(ps_pelo))
+adonis2(
+  bray_pelo ~ Colonia + Fecha,
+  data = meta_pelo,
+  permutations = 99
+)
+```
+
+#Conclusión
+El flujo de trabajo nos permitio procesar secuencias de microbiota asociada a murcielagos utilizando DADA2 y Phyloseq. 
